@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34408.163
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NUMAyei", "NUMAyei.vcxproj", "{B4BAC653-3485-4FAD-AB93-80AC3F9A4FCE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NUMADLL", "NUMAyei.vcxproj", "{B4BAC653-3485-4FAD-AB93-80AC3F9A4FCE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NUMA", "NUMA\NUMA.vcxproj", "{5778DE89-F769-4C23-897A-98F4904A2BFF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,14 @@ Global
 		{B4BAC653-3485-4FAD-AB93-80AC3F9A4FCE}.Release|x64.Build.0 = Release|x64
 		{B4BAC653-3485-4FAD-AB93-80AC3F9A4FCE}.Release|x86.ActiveCfg = Release|Win32
 		{B4BAC653-3485-4FAD-AB93-80AC3F9A4FCE}.Release|x86.Build.0 = Release|Win32
+		{5778DE89-F769-4C23-897A-98F4904A2BFF}.Debug|x64.ActiveCfg = Debug|x64
+		{5778DE89-F769-4C23-897A-98F4904A2BFF}.Debug|x64.Build.0 = Debug|x64
+		{5778DE89-F769-4C23-897A-98F4904A2BFF}.Debug|x86.ActiveCfg = Debug|Win32
+		{5778DE89-F769-4C23-897A-98F4904A2BFF}.Debug|x86.Build.0 = Debug|Win32
+		{5778DE89-F769-4C23-897A-98F4904A2BFF}.Release|x64.ActiveCfg = Release|x64
+		{5778DE89-F769-4C23-897A-98F4904A2BFF}.Release|x64.Build.0 = Release|x64
+		{5778DE89-F769-4C23-897A-98F4904A2BFF}.Release|x86.ActiveCfg = Release|Win32
+		{5778DE89-F769-4C23-897A-98F4904A2BFF}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
