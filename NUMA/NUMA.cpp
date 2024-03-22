@@ -26,7 +26,7 @@ int MessageBoxPrintfW(const TCHAR* msgBoxTitle, const TCHAR* msgBoxFormat, ...)
     return result;
 }
 
-DWORD GetProcId(const char* pn, unsigned short int fi = 0b1101)
+DWORD GetProcId(std::wstring pn, unsigned short int fi = 0b1101)
 {
     DWORD procId = 0;
     HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -44,7 +44,7 @@ DWORD GetProcId(const char* pn, unsigned short int fi = 0b1101)
             {
                 if (fi == 0b10100111001)
                     std::cout << pE.szExeFile << u8"\x9\x9\x9" << pE.th32ProcessID << std::endl;
-                if (!_stricmp(pE.szExeFile, pn))
+                if (!_wcsicmp(pE.szExeFile, pn.c_str()))
                 {
                     procId = pE.th32ProcessID;
                     print("Process : 0x%lX\n", pE);
@@ -58,7 +58,7 @@ DWORD GetProcId(const char* pn, unsigned short int fi = 0b1101)
 }
 
 
-BOOL InjectDLL(DWORD procID, const char* dllPath)
+BOOL InjectDLL(DWORD procID, const wchar_t* dllPath)
 {
     BOOL WPM = 0;
 
@@ -68,7 +68,7 @@ BOOL InjectDLL(DWORD procID, const char* dllPath)
         return -1;
     }
     void* loc = VirtualAllocEx(hProc, 0, MAX_PATH, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-    WPM = WriteProcessMemory(hProc, loc, dllPath, strlen(dllPath) + 1, 0);
+    WPM = WriteProcessMemory(hProc, loc, dllPath, wcslen(dllPath) + 1, 0);
     if (!WPM)
     {
         CloseHandle(hProc);
@@ -78,13 +78,13 @@ BOOL InjectDLL(DWORD procID, const char* dllPath)
     HANDLE hThread = CreateRemoteThread(hProc, 0, 0, (LPTHREAD_START_ROUTINE)LoadLibraryA, loc, 0, 0);
     if (!hThread)
     {
-        VirtualFree(loc, strlen(dllPath) + 1, MEM_RELEASE);
+        VirtualFree(loc, wcslen(dllPath) + 1, MEM_RELEASE);
         CloseHandle(hProc);
         return -1;
     }
     print("Thread Created Succesfully 0x%lX\n", hThread);
     CloseHandle(hProc);
-    VirtualFree(loc, strlen(dllPath) + 1, MEM_RELEASE);
+    VirtualFree(loc, wcslen(dllPath) + 1, MEM_RELEASE);
     CloseHandle(hThread);
     return 0;
 }
@@ -157,8 +157,8 @@ int SetUpRegistry()
 
 int main()
 {
-    std::string pname;
-    const auto& dllpath = L"NUMADLL.dll";
+    std::wstring pname;
+    auto dllpath = L"NUMADLL.dll";
 
     if (PathFileExists(dllpath) == FALSE)
     {
@@ -173,8 +173,8 @@ int main()
         print("Here is a list of available process \n", GetLastError());
         Sleep(3500);
         system("cls");
-        GetProcId("skinjbir", 0b10100111001);
+        GetProcId(L"skinjbir", 0b10100111001);
     }
     else
-        InjectDLL(procId, dllpath.c_str());
+        InjectDLL(procId, dllpath);
 }
