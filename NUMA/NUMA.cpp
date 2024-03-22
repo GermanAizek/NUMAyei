@@ -155,9 +155,9 @@ int SetUpRegistry()
     return 0;
 }
 
-int main()
+int wmain(int argc, wchar_t** argv)
 {
-    std::wstring pname;
+    std::wstring pname = argv[1];
     auto dllpath = L"NUMADLL.dll";
 
     if (PathFileExists(dllpath) == FALSE)
