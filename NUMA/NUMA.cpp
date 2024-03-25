@@ -187,7 +187,7 @@ DWORD startup(std::wstring path)
         &pi           // Pointer to PROCESS_INFORMATION structure
     );
 
-    Sleep(100);
+    //Sleep(100);
 
     DWORD pid = pi.dwProcessId;
 

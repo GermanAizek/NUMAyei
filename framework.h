@@ -67,18 +67,8 @@ void setThreadAffinityAllGroupCores(HANDLE handle)
     const auto threads = GetLogicalThreadCount();
     KAFFINITY maskAllCores = (1 << threads) - 1;
 
-    auto node = static_cast<PGROUP_AFFINITY>(malloc(sizeof(PGROUP_AFFINITY)));
-    //auto aff = node;
-    //memset(&node, 0, sizeof(node));
-    //node->Group = group;
-    node->Mask = maskAllCores;
-    SetThreadGroupAffinity(handle, node, NULL);
-
-    // HACK: set thread affinity for main thread
-    SetThreadGroupAffinity(GetCurrentThread(), node, NULL);
-
     /* hard way, behavior is same*/
-    /*
+    
     DWORD length = 0;
     GetLogicalProcessorInformationEx(RelationAll, nullptr, &length);
 
@@ -108,7 +98,7 @@ void setThreadAffinityAllGroupCores(HANDLE handle)
             }
         }
     }
-    */
+
     /*
     SetThreadAffinityMask(handle, maskAllCores);
 

@@ -141,7 +141,7 @@ unsigned int DetourHardware_concurrency()
     return GetLogicalThreadCount();
 }
 
-BOOL InitCreateEnableHooks(LPCSTR nameFunction, LPVOID detour, LPVOID original)
+BOOL InitCreateEnableHooks()
 {
     // WINAPI hook
     if (MH_CreateHookApiEx(L"kernel32", "CreateThread", &DetourCreateThread, reinterpret_cast<LPVOID*>(&fp_CreateThread), NULL) != MH_OK)
@@ -233,6 +233,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
             MessageBoxW(NULL, L"Failed to initialize MinHook", L"HideTS", MB_OK);
             return TRUE;
         }
+        InitCreateEnableHooks();
         break;
     case DLL_THREAD_ATTACH:
     case DLL_THREAD_DETACH:
