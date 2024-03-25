@@ -8,15 +8,6 @@
 
 #include "framework.h"
 
-/*
-namespace std::thread
-{
-    typedef unsigned int (*hardware_concurrency)() noexcept;
-    hardware_concurrency fp_hardware_concurrency = NULL;
-}
-*/
-
-
 /* Hooking and extending CreateThread's capabilities to all logical processors on Windows system using SetThreadAffinity function */
 typedef HANDLE (WINAPI *HCreateThread)(
     _In_opt_ LPSECURITY_ATTRIBUTES lpThreadAttributes,
@@ -65,6 +56,7 @@ HGetActiveProcessorCount fp_GetActiveProcessorCount = NULL;
 typedef unsigned int (*Hhardware_concurrency)();
 Hhardware_concurrency fp_hardware_concurrency = NULL;
 
+/* Detours functions */
 HANDLE WINAPI DetourCreateThread(
     _In_opt_ LPSECURITY_ATTRIBUTES lpThreadAttributes,
     _In_ SIZE_T dwStackSize,
@@ -74,7 +66,8 @@ HANDLE WINAPI DetourCreateThread(
     _Out_opt_ LPDWORD lpThreadId
 )
 {
-    // set Thread Affinity All Group Logical Cores its effi
+    // MessageBoxA(0, "DetourCreateThread", "Some Title", MB_ICONERROR | MB_OK);
+    // set Thread Affinity All Group Logical Cores
     auto thread = fp_CreateThread(lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags /* | INHERIT_PARENT_AFFINITY */, lpThreadId);
     setThreadAffinityAllGroupCores(thread);
     return thread;
@@ -90,6 +83,7 @@ HANDLE WINAPI DetourCreateRemoteThread(
     _Out_opt_ LPDWORD lpThreadId
 )
 {
+    // MessageBoxA(0, "DetourCreateRemoteThread", "Some Title", MB_ICONERROR | MB_OK);
     auto thread = fp_CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags /* | INHERIT_PARENT_AFFINITY */, lpThreadId);
     setThreadAffinityAllGroupCores(thread);
     return thread;
@@ -106,7 +100,8 @@ HANDLE WINAPI DetourCreateRemoteThreadEx(
     _Out_opt_ LPDWORD lpThreadId
 )
 {
-    const auto threads = GetLogicalThreadCount();
+    // MessageBoxA(0, "DetourCreateRemoteThreadEx", "Some Title", MB_ICONERROR | MB_OK);
+    const auto threads = __g_ProcLogicalThreadCount;
     KAFFINITY maskAllCores = (1 << threads) - 1;
 
     auto* pAttribs = lpAttributeList;
@@ -122,7 +117,8 @@ VOID WINAPI DetourGetSystemInfo(
     _Out_ LPSYSTEM_INFO lpSystemInfo
 )
 {
-    lpSystemInfo->dwNumberOfProcessors = GetLogicalThreadCount();
+    // MessageBoxA(0, "DetourGetSystemInfo", "Some Title", MB_ICONERROR | MB_OK);
+    lpSystemInfo->dwNumberOfProcessors = __g_ProcLogicalThreadCount;
     fp_GetSystemInfo(lpSystemInfo);
 }
 
@@ -130,15 +126,17 @@ DWORD WINAPI DetourGetActiveProcessorCount(
     _In_ WORD GroupNumber
 )
 {
-    //GroupNumber = ALL_PROCESSOR_GROUPS;
-    //return fp_GetActiveProcessorCount(GroupNumber);
-    return GetLogicalThreadCount();
+    // MessageBoxA(0, "DetourGetActiveProcessorCount", "Some Title", MB_ICONERROR | MB_OK);
+    GroupNumber = ALL_PROCESSOR_GROUPS;
+    return fp_GetActiveProcessorCount(GroupNumber);
+    //return __g_ProcLogicalThreadCount;
 }
 
 unsigned int DetourHardware_concurrency()
 {
+    // MessageBoxA(0, "DetourHardware_concurrency", "Some Title", MB_ICONERROR | MB_OK);
     //return fp_hardware_concurrency();
-    return GetLogicalThreadCount();
+    return __g_ProcLogicalThreadCount;
 }
 
 BOOL InitCreateEnableHooks()
@@ -149,19 +147,19 @@ BOOL InitCreateEnableHooks()
         MessageBoxW(NULL, L"Failed to create CreateThread hook", L"NUMAYei", MB_OK);
         return TRUE;
     }
-
+    
     if (MH_CreateHookApiEx(L"kernel32", "CreateRemoteThread", &DetourCreateRemoteThread, reinterpret_cast<LPVOID*>(&fp_CreateRemoteThread), NULL) != MH_OK)
     {
         MessageBoxW(NULL, L"Failed to create CreateRemoteThread hook", L"NUMAYei", MB_OK);
         return TRUE;
     }
-
+    /*
     if (MH_CreateHookApiEx(L"kernel32", "CreateRemoteThreadEx", &DetourCreateRemoteThreadEx, reinterpret_cast<LPVOID*>(&fp_CreateRemoteThreadEx), NULL) != MH_OK)
     {
         MessageBoxW(NULL, L"Failed to create CreateRemoteThreadEx hook", L"NUMAYei", MB_OK);
         return TRUE;
     }
-
+    */
     if (MH_CreateHookApiEx(L"kernel32", "GetSystemInfo", &DetourGetSystemInfo, reinterpret_cast<LPVOID*>(&fp_GetSystemInfo), NULL) != MH_OK)
     {
         MessageBoxW(NULL, L"Failed to create GetSystemInfo hook", L"NUMAYei", MB_OK);
@@ -186,19 +184,19 @@ BOOL InitCreateEnableHooks()
         MessageBoxW(NULL, L"Failed to enable hook CreateThread", L"NUMAYei", MB_OK);
         return TRUE;
     }
-
+    
     if (MH_EnableHook(&CreateRemoteThread) != MH_OK)
     {
         MessageBoxW(NULL, L"Failed to enable hook CreateRemoteThread", L"NUMAYei", MB_OK);
         return TRUE;
     }
-
+    /*
     if (MH_EnableHook(&CreateRemoteThreadEx) != MH_OK)
     {
         MessageBoxW(NULL, L"Failed to enable hook CreateRemoteThreadEx", L"NUMAYei", MB_OK);
         return TRUE;
     }
-
+    */
     if (MH_EnableHook(&GetSystemInfo) != MH_OK)
     {
         MessageBoxW(NULL, L"Failed to enable hook GetSystemInfo", L"NUMAYei", MB_OK);
@@ -233,6 +231,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
             MessageBoxW(NULL, L"Failed to initialize MinHook", L"HideTS", MB_OK);
             return TRUE;
         }
+        __g_ProcGroupCount = calcLogicalGroups();
+        __g_ProcLogicalThreadCount = GetLogicalThreadCount();
         InitCreateEnableHooks();
         break;
     case DLL_THREAD_ATTACH:

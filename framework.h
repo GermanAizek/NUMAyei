@@ -6,11 +6,35 @@
 #include <memory>
 #include <thread>
 #include <algorithm>
+#include <vector>
+
+static constexpr unsigned MaxLogicalProcessorsPerGroup =
+std::numeric_limits<KAFFINITY>::digits;
 
 bool IsNUMA() noexcept
 {
     ULONG HighestNodeNumber;
     return !(!GetNumaHighestNodeNumber(&HighestNodeNumber) || HighestNodeNumber == 0);
+}
+
+int __g_ProcGroupCount = 0;
+int __g_ProcLogicalThreadCount = 0;
+
+int calcLogicalGroups()
+{
+    DWORD length = 0;
+    GetLogicalProcessorInformationEx(RelationAll, nullptr, &length);
+
+    std::unique_ptr<void, void (*)(void*)> buffer(std::malloc(length), std::free);
+
+    auto* mem = reinterpret_cast<unsigned char*>(buffer.get());
+    GetLogicalProcessorInformationEx(RelationAll, reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>(mem), &length);
+
+    DWORD i = 0;
+    while (i < length) {
+        const auto* proc = reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>(mem + i);
+        return proc->Processor.GroupCount;
+    }
 }
 
 // This implementation supports both conventional single-cpu PC configurations
@@ -63,47 +87,56 @@ unsigned int GetLogicalThreadCount() noexcept
 
 void setThreadAffinityAllGroupCores(HANDLE handle)
 {
-    // old variant
-    const auto threads = GetLogicalThreadCount();
-    KAFFINITY maskAllCores = (1 << threads) - 1;
-
-    /* hard way, behavior is same*/
+    /* hard way */
     
-    DWORD length = 0;
-    GetLogicalProcessorInformationEx(RelationAll, nullptr, &length);
+    if (*(DWORD*)(0x7FFE0000 + 0x260) > 19045) /* Windows 10 22H2 */
+    {
+        std::vector<PROCESSOR_NUMBER> procs;
+        procs.reserve(__g_ProcGroupCount);
+        //MessageBoxA(0, std::to_string(__g_ProcLogicalThreadCount).c_str(), "Some Title", MB_ICONERROR | MB_OK);
+        //MessageBoxA(0, std::to_string(__g_ProcGroupCount).c_str(), "Some Title", MB_ICONERROR | MB_OK);
+        for (int i = 0; i <= __g_ProcGroupCount; i++)
+        {
+            PROCESSOR_NUMBER n = {};
+            n.Group = i;
+            n.Number = 63; //% MaxLogicalProcessorsPerGroup; //(__g_ProcLogicalThreadCount / __g_ProcGroupCount + 1); // % MaxLogicalProcessorsPerGroup;
+            procs.push_back(n);
+        }
 
-    std::unique_ptr<void, void (*)(void*)> buffer(std::malloc(length), std::free);
+        auto first = procs.front();
+        auto last = procs.back();
 
-    auto* mem = reinterpret_cast<unsigned char*>(buffer.get());
-    GetLogicalProcessorInformationEx(RelationAll, reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>(mem), &length);
-    
-    DWORD i = 0;
-    while (i < length) {
-        const auto* proc = reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>(mem + i);
-        if (proc->Relationship == RelationProcessorCore) {
-            for (WORD group = 0; group < proc->Processor.GroupCount; ++group) {
-                auto node = static_cast<PGROUP_AFFINITY>(malloc(sizeof(PGROUP_AFFINITY)));
-                //auto aff = node;
-                //memset(&node, 0, sizeof(node));
-                node->Group = group;
-                node->Mask = maskAllCores;
-                SetThreadGroupAffinity(handle, node, NULL);
+        //if (first.Group != last.Group) {
+            // do nothing; if we're running on Windows 11 or Server 2022, we're
+            // already a multi-group process, so leave it at that
+        //    return;
+        //}
 
-                // HACK: set thread affinity for main thread
-                SetThreadGroupAffinity(GetCurrentThread(), node, NULL);
+        GROUP_AFFINITY groupAffinity = { .Mask = KAFFINITY(-1), .Group = first.Group };
+        if (last.Number != MaxLogicalProcessorsPerGroup) {
+            groupAffinity.Mask = KAFFINITY(1) << (last.Number + 1 - first.Number);
+            groupAffinity.Mask -= 1;
+        }
+        groupAffinity.Mask <<= first.Number;
 
-                //GetNumaNodeProcessorMaskEx(group, node);
-                //maskAllCores += node->Mask;
-                //break;
-            }
+        if (SetThreadGroupAffinity(handle, &groupAffinity, nullptr) == 0) {
+            //win32_perror("SetThreadGroupAffinity");
+            return;
+        }
+
+        if (SetThreadGroupAffinity(GetCurrentThread(), &groupAffinity, nullptr) == 0) {
+            //win32_perror("SetThreadGroupAffinity");
+            return;
         }
     }
+    else
+    {
+        SetThreadIdealProcessor(handle, MAXIMUM_PROCESSORS);
+        //SetThreadAffinityMask(handle, maskAllCores);
 
-    /*
-    SetThreadAffinityMask(handle, maskAllCores);
-
-    // HACK: set thread affinity for main thread
-    SetThreadAffinityMask(GetCurrentThread(), maskAllCores);
-    SetProcessAffinityMask(GetCurrentProcess(), maskAllCores);
-    */
+        // HACK: set thread affinity for main thread
+        SetThreadIdealProcessor(GetCurrentThread(), MAXIMUM_PROCESSORS);
+        //SetThreadAffinityMask(GetCurrentThread(), maskAllCores);
+        //SetProcessAffinityMask(GetCurrentProcess(), maskAllCores);
+    }
 }

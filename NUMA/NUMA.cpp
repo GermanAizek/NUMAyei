@@ -64,6 +64,7 @@ DWORD GetProcId(std::wstring pn, unsigned short int fi = 0b1101)
 
 BOOL InjectDLL(DWORD procID, const wchar_t* dllPath)
 {
+    // TODO: not injected after create process !!!!
     BOOL WPM = 0;
 
     HANDLE hProc = OpenProcess(PROCESS_ALL_ACCESS | PROCESS_VM_WRITE, 0, procID);
