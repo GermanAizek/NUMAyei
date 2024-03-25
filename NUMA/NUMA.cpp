@@ -6,7 +6,9 @@
 #include <TlHelp32.h>
 #include <iomanip>
 #include <Shlwapi.h>
-#pragma comment( lib, "shlwapi.lib")
+#include <psapi.h>
+#pragma comment(lib, "shlwapi.lib")
+#pragma comment(lib, "Psapi")
 
 #define print(format, ...) fprintf (stderr, format, __VA_ARGS__)
 
@@ -48,7 +50,9 @@ DWORD GetProcId(std::wstring pn, unsigned short int fi = 0b1101)
                 {
                     procId = pE.th32ProcessID;
                     print("Process : 0x%lX\n", pE);
-                    break;
+                    CloseHandle(hSnap);
+                    return procId;
+                    //break;
                 }
             } while (Process32Next(hSnap, &pE));
         }
@@ -62,15 +66,17 @@ BOOL InjectDLL(DWORD procID, const wchar_t* dllPath)
 {
     BOOL WPM = 0;
 
-    HANDLE hProc = OpenProcess(PROCESS_ALL_ACCESS, 0, procID);
+    HANDLE hProc = OpenProcess(PROCESS_ALL_ACCESS | PROCESS_VM_WRITE, 0, procID);
     if (hProc == INVALID_HANDLE_VALUE)
     {
+        print("OpenProcess failed process is INVALID_HANDLE_VALUE!");
         return -1;
     }
     void* loc = VirtualAllocEx(hProc, 0, MAX_PATH, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     WPM = WriteProcessMemory(hProc, loc, dllPath, wcslen(dllPath) + 1, 0);
     if (!WPM)
     {
+        print("WriteProcessMemory failed! GetLastError = %d", GetLastError());
         CloseHandle(hProc);
         return -1;
     }
@@ -155,6 +161,43 @@ int SetUpRegistry()
     return 0;
 }
 
+DWORD startup(std::wstring path)
+{
+    // additional information
+    STARTUPINFOW si;
+    PROCESS_INFORMATION pi;
+
+    // set the size of the structures
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    ZeroMemory(&pi, sizeof(pi));
+
+    // start the program up
+    CreateProcessW
+    (
+        NULL,   // the path
+        const_cast<wchar_t*>(path.c_str()),                // Command line
+        NULL,                   // Process handle not inheritable
+        NULL,                   // Thread handle not inheritable
+        FALSE,                  // Set handle inheritance to FALSE
+        CREATE_NEW_CONSOLE,     // Opens file in a separate console
+        NULL,           // Use parent's environment block
+        NULL,           // Use parent's starting directory 
+        &si,            // Pointer to STARTUPINFO structure
+        &pi           // Pointer to PROCESS_INFORMATION structure
+    );
+
+    Sleep(100);
+
+    DWORD pid = pi.dwProcessId;
+
+    // Close process and thread handles. 
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    return pid;
+}
+
 int wmain(int argc, wchar_t** argv)
 {
     std::wstring pname = argv[1];
@@ -165,8 +208,13 @@ int wmain(int argc, wchar_t** argv)
         print("DLL File does NOT exist!");
         return EXIT_FAILURE;
     }
-    DWORD procId = 0;
-    procId = GetProcId(pname.c_str());
+
+    DWORD procId = startup(pname); // begin start process and inject
+    
+    //procId = GetProcId(pname.c_str()); // inject to exist process
+
+    print("Process ID [ %d ] attempt injected ...", procId);
+    
     if (procId == NULL)
     {
         print("Process Not found (0x%lX)\n", GetLastError());
