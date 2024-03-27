@@ -66,10 +66,22 @@ HANDLE WINAPI DetourCreateThread(
     _Out_opt_ LPDWORD lpThreadId
 )
 {
-    // MessageBoxA(0, "DetourCreateThread", "Some Title", MB_ICONERROR | MB_OK);
-    // set Thread Affinity All Group Logical Cores
+    // set Thread Affinity All Group Logical Cores and NUMA nodes
+    //uv_thread_t tid;
+    //uv_thread_create(&tid, reinterpret_cast<uv_thread_cb>(lpStartAddress), NULL);
+
     auto thread = fp_CreateThread(lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags /* | INHERIT_PARENT_AFFINITY */, lpThreadId);
-    setThreadAffinityAllGroupCores(thread);
+    //setThreadAffinityAllGroupCores(thread);
+
+    GROUP_AFFINITY* nodes = new GROUP_AFFINITY[__g_ProcGroupCount+1];
+    for (int i = 0; i <= __g_ProcGroupCount; ++i)
+    {
+        nodes[i].Group = i;
+        nodes[i].Mask = (ULONG_PTR(1) << (__g_ProcLogicalThreadCount / (__g_ProcGroupCount+1))) - 1;
+    }
+    SetThreadSelectedCpuSetMasks(thread, nodes, __g_ProcGroupCount+1);
+
+    delete[] nodes;
     return thread;
 }
 
@@ -84,6 +96,9 @@ HANDLE WINAPI DetourCreateRemoteThread(
 )
 {
     // MessageBoxA(0, "DetourCreateRemoteThread", "Some Title", MB_ICONERROR | MB_OK);
+    //uv_thread_t tid;
+    //uv_thread_create(&tid, reinterpret_cast<uv_thread_cb>(lpStartAddress), NULL);
+
     auto thread = fp_CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags /* | INHERIT_PARENT_AFFINITY */, lpThreadId);
     setThreadAffinityAllGroupCores(thread);
     return thread;
@@ -100,16 +115,11 @@ HANDLE WINAPI DetourCreateRemoteThreadEx(
     _Out_opt_ LPDWORD lpThreadId
 )
 {
-    // MessageBoxA(0, "DetourCreateRemoteThreadEx", "Some Title", MB_ICONERROR | MB_OK);
-    const auto threads = __g_ProcLogicalThreadCount;
-    KAFFINITY maskAllCores = (1 << threads) - 1;
-
     auto* pAttribs = lpAttributeList;
-    GROUP_AFFINITY GrpAffinity = { 0 };
-    GrpAffinity.Mask = maskAllCores;
-    UpdateProcThreadAttribute(pAttribs, 0, PROC_THREAD_ATTRIBUTE_GROUP_AFFINITY, &GrpAffinity, sizeof(GrpAffinity), NULL, NULL);
+    DWORD node = __g_ProcSelectedForThread;
+    UpdateProcThreadAttribute(pAttribs, 0, PROC_THREAD_ATTRIBUTE_PREFERRED_NODE, &node, sizeof(DWORD), NULL, NULL);
     auto thread = fp_CreateRemoteThreadEx(hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags /* | INHERIT_PARENT_AFFINITY */, pAttribs, lpThreadId);
-    //setThreadAffinityAllGroupCores(thread);
+    setThreadAffinityAllGroupCores(thread);
     return thread;
 }
 
