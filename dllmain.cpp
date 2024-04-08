@@ -53,6 +53,13 @@ typedef DWORD (WINAPI* HGetActiveProcessorCount)(
 );
 HGetActiveProcessorCount fp_GetActiveProcessorCount = NULL;
 
+typedef DWORD(WINAPI* HGetEnvironmentVariableA)(
+    _In_opt_ LPCSTR lpName,
+    _Out_writes_to_opt_(nSize, return +1) LPSTR lpBuffer,
+    _In_ DWORD nSize
+);
+HGetEnvironmentVariableA fp_GetEnvironmentVariableA = NULL;
+
 typedef unsigned int (*Hhardware_concurrency)();
 Hhardware_concurrency fp_hardware_concurrency = NULL;
 
@@ -130,6 +137,17 @@ DWORD WINAPI DetourGetActiveProcessorCount(
     //return __g_ProcLogicalThreadCount;
 }
 
+DWORD WINAPI DetourGetEnvironmentVariableA(
+    _In_opt_ LPCSTR lpName,
+    _Out_writes_to_opt_(nSize, return +1) LPSTR lpBuffer,
+    _In_ DWORD nSize
+)
+{
+    if (lpName == "NUMBER_OF_PROCESSORS")
+        _itoa(__g_ProcLogicalThreadCount, lpBuffer, 10);
+    return fp_GetEnvironmentVariableA(lpName, lpBuffer, nSize);
+}
+
 unsigned int DetourHardware_concurrency()
 {
     // MessageBoxA(0, "DetourHardware_concurrency", "Some Title", MB_ICONERROR | MB_OK);
@@ -167,6 +185,12 @@ BOOL InitCreateEnableHooks()
     if (MH_CreateHookApiEx(L"kernel32", "GetActiveProcessorCount", &DetourGetActiveProcessorCount, reinterpret_cast<LPVOID*>(&fp_GetActiveProcessorCount), NULL) != MH_OK)
     {
         MessageBoxW(NULL, L"Failed to create GetActiveProcessorCount hook", L"NUMAYei", MB_OK);
+        return TRUE;
+    }
+
+    if (MH_CreateHookApiEx(L"kernel32", "GetEnvironmentVariableA", &DetourGetEnvironmentVariableA, reinterpret_cast<LPVOID*>(&fp_GetEnvironmentVariableA), NULL) != MH_OK)
+    {
+        MessageBoxW(NULL, L"Failed to create GetEnvironmentVariableA hook", L"NUMAYei", MB_OK);
         return TRUE;
     }
     
