@@ -20,7 +20,7 @@ bool IsNUMA() noexcept
 
 int __g_ProcGroupCount = 0;
 int __g_ProcLogicalThreadCount = 0;
-//int __g_ProcSelectedForThread = 0;
+int __g_ProcSelectedForThread = 0;
 
 int calcLogicalGroups()
 {
@@ -119,10 +119,10 @@ void setThreadParallelAllNUMAGroups(HANDLE handle) noexcept
     proc.Number = __g_ProcLogicalThreadCount / __g_ProcGroupCount;
     //MessageBoxW(NULL, std::to_wstring(__g_ProcLogicalThreadCount).c_str(), L"NUMAYei", MB_OK);
     SetThreadIdealProcessorEx(handle, &proc, NULL);
+    */
 
     if (__g_ProcSelectedForThread < __g_ProcGroupCount)
         ++__g_ProcSelectedForThread;
     else
         __g_ProcSelectedForThread = 0;
-    */
 }

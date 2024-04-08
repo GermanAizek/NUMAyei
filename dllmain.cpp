@@ -101,10 +101,10 @@ HANDLE WINAPI DetourCreateRemoteThreadEx(
     _Out_opt_ LPDWORD lpThreadId
 )
 {
-    auto* pAttribs = lpAttributeList;
-    DWORD node = __g_ProcSelectedForThread;
-    UpdateProcThreadAttribute(pAttribs, 0, PROC_THREAD_ATTRIBUTE_PREFERRED_NODE, &node, sizeof(DWORD), NULL, NULL);
-    auto thread = fp_CreateRemoteThreadEx(hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags /* | INHERIT_PARENT_AFFINITY */, pAttribs, lpThreadId);
+    //auto* pAttribs = lpAttributeList;
+    //DWORD node = __g_ProcSelectedForThread;
+    //UpdateProcThreadAttribute(pAttribs, 0, PROC_THREAD_ATTRIBUTE_PREFERRED_NODE, &node, sizeof(DWORD), NULL, NULL);
+    auto thread = fp_CreateRemoteThreadEx(hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags /* | INHERIT_PARENT_AFFINITY */, lpAttributeList, lpThreadId);
     setThreadAffinityAllGroupCores(thread);
     setThreadParallelAllNUMAGroups(thread);
 
