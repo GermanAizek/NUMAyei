@@ -34,4 +34,6 @@ Windows scheduler has to allocate the highest frequency to calculate task faster
 
 Good example below in screenshot using NUMAyei with running binary not NUMA-aware adapting. 
 
-![](https://github.com/GermanAizek/NUMAyei/assets/21138600/a9da1ef1-4aff-4fd1-bb10-a359c224f32f)
+![NUMA run binary optimization](https://github.com/GermanAizek/NUMAyei/assets/21138600/a9da1ef1-4aff-4fd1-bb10-a359c224f32f)
+
+![NUMA full utilize](https://github.com/GermanAizek/NUMAyei/assets/21138600/c19e3519-8250-4423-94ff-32665b292fd7)
