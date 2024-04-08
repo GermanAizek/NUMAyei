@@ -37,3 +37,5 @@ Good example below in screenshot using NUMAyei with running binary not NUMA-awar
 ![NUMA run binary optimization](https://github.com/GermanAizek/NUMAyei/assets/21138600/a9da1ef1-4aff-4fd1-bb10-a359c224f32f)
 
 ![NUMA full utilize](https://github.com/GermanAizek/NUMAyei/assets/21138600/c19e3519-8250-4423-94ff-32665b292fd7)
+
+![NUMA Windows full implementation verified bencmark CPU-Z](https://github.com/GermanAizek/NUMAyei/assets/21138600/dee749bc-73ac-4bbf-b183-ee8e0ad861e2)
