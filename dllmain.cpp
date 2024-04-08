@@ -66,22 +66,10 @@ HANDLE WINAPI DetourCreateThread(
     _Out_opt_ LPDWORD lpThreadId
 )
 {
-    // set Thread Affinity All Group Logical Cores and NUMA nodes
-    //uv_thread_t tid;
-    //uv_thread_create(&tid, reinterpret_cast<uv_thread_cb>(lpStartAddress), NULL);
-
     auto thread = fp_CreateThread(lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags /* | INHERIT_PARENT_AFFINITY */, lpThreadId);
-    //setThreadAffinityAllGroupCores(thread);
+    setThreadAffinityAllGroupCores(thread);
+    setThreadParallelAllNUMAGroups(thread);
 
-    GROUP_AFFINITY* nodes = new GROUP_AFFINITY[__g_ProcGroupCount+1];
-    for (int i = 0; i <= __g_ProcGroupCount; ++i)
-    {
-        nodes[i].Group = i;
-        nodes[i].Mask = (ULONG_PTR(1) << (__g_ProcLogicalThreadCount / (__g_ProcGroupCount+1))) - 1;
-    }
-    SetThreadSelectedCpuSetMasks(thread, nodes, __g_ProcGroupCount+1);
-
-    delete[] nodes;
     return thread;
 }
 
@@ -95,12 +83,10 @@ HANDLE WINAPI DetourCreateRemoteThread(
     _Out_opt_ LPDWORD lpThreadId
 )
 {
-    // MessageBoxA(0, "DetourCreateRemoteThread", "Some Title", MB_ICONERROR | MB_OK);
-    //uv_thread_t tid;
-    //uv_thread_create(&tid, reinterpret_cast<uv_thread_cb>(lpStartAddress), NULL);
-
     auto thread = fp_CreateRemoteThread(hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags /* | INHERIT_PARENT_AFFINITY */, lpThreadId);
     setThreadAffinityAllGroupCores(thread);
+    setThreadParallelAllNUMAGroups(thread);
+
     return thread;
 }
 
@@ -120,6 +106,8 @@ HANDLE WINAPI DetourCreateRemoteThreadEx(
     UpdateProcThreadAttribute(pAttribs, 0, PROC_THREAD_ATTRIBUTE_PREFERRED_NODE, &node, sizeof(DWORD), NULL, NULL);
     auto thread = fp_CreateRemoteThreadEx(hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags /* | INHERIT_PARENT_AFFINITY */, pAttribs, lpThreadId);
     setThreadAffinityAllGroupCores(thread);
+    setThreadParallelAllNUMAGroups(thread);
+
     return thread;
 }
 
@@ -129,7 +117,7 @@ VOID WINAPI DetourGetSystemInfo(
 {
     // MessageBoxA(0, "DetourGetSystemInfo", "Some Title", MB_ICONERROR | MB_OK);
     lpSystemInfo->dwNumberOfProcessors = __g_ProcLogicalThreadCount;
-    fp_GetSystemInfo(lpSystemInfo);
+    return fp_GetSystemInfo(lpSystemInfo);
 }
 
 DWORD WINAPI DetourGetActiveProcessorCount(
@@ -241,7 +229,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
             MessageBoxW(NULL, L"Failed to initialize MinHook", L"HideTS", MB_OK);
             return TRUE;
         }
-        __g_ProcGroupCount = calcLogicalGroups();
+        __g_ProcGroupCount = calcLogicalGroups() + 1;
         __g_ProcLogicalThreadCount = GetLogicalThreadCount();
         InitCreateEnableHooks();
         break;

@@ -20,7 +20,7 @@ bool IsNUMA() noexcept
 
 int __g_ProcGroupCount = 0;
 int __g_ProcLogicalThreadCount = 0;
-int __g_ProcSelectedForThread = 0;
+//int __g_ProcSelectedForThread = 0;
 
 int calcLogicalGroups()
 {
@@ -87,10 +87,9 @@ unsigned int GetLogicalThreadCount() noexcept
     return concurrency;
 }
 
-void setThreadAffinityAllGroupCores(HANDLE handle)
+void setThreadAffinityAllGroupCores(HANDLE handle) noexcept
 {
     /* After Windows 10 22H2, include Windows 11 not needed set thread affinity */
-    
     if (*(DWORD*)(0x7FFE0000 + 0x260) <= 19045) /* Windows 10 22H2 */
     {
         //SetThreadIdealProcessor(handle, MAXIMUM_PROCESSORS);
@@ -100,33 +99,30 @@ void setThreadAffinityAllGroupCores(HANDLE handle)
         //SetThreadIdealProcessor(GetCurrentThread(), MAXIMUM_PROCESSORS);
         SetThreadAffinityMask(GetCurrentThread(), (1 << __g_ProcLogicalThreadCount) - 1);
     }
-    /*
-    else
+    //MessageBoxW(NULL, L"Crash", L"NUMAYei", MB_OK);
+}
+
+void setThreadParallelAllNUMAGroups(HANDLE handle) noexcept
+{
+    auto nodes = std::make_unique<GROUP_AFFINITY[]>(__g_ProcGroupCount);
+    for (int i = 0; i < __g_ProcGroupCount; ++i)
     {
-        SetThreadIdealProcessor(handle, MAXIMUM_PROCESSORS);
-        SetThreadIdealProcessor(GetCurrentThread(), MAXIMUM_PROCESSORS);
+        nodes[i].Group = i;
+        nodes[i].Mask = (ULONG_PTR(1) << (__g_ProcLogicalThreadCount / __g_ProcGroupCount)) - 1;
     }
-    */
+    SetThreadSelectedCpuSetMasks(handle, nodes.get(), __g_ProcGroupCount);
 
-    /* Parallel among NUMA nodes using global selected node */
-
-    //MessageBoxW(NULL, std::to_wstring(__g_ProcSelectedForThread).c_str(), L"NUMAYei", MB_OK);
-    PROCESSOR_NUMBER prev;
+    // parallel threads using global var scheduler
+    /* not effective
     PROCESSOR_NUMBER proc;
     proc.Group = __g_ProcSelectedForThread;
-    proc.Number = __g_ProcLogicalThreadCount / (__g_ProcGroupCount + 1);
+    proc.Number = __g_ProcLogicalThreadCount / __g_ProcGroupCount;
     //MessageBoxW(NULL, std::to_wstring(__g_ProcLogicalThreadCount).c_str(), L"NUMAYei", MB_OK);
-    SetThreadIdealProcessorEx(handle, &proc, &prev);
-    //if (prev.Group == proc.Group)
-    //{
-    //    proc.Group = ++__g_ProcSelectedForThread;
-    //    SetThreadIdealProcessorEx(handle, &proc, &prev);
-    //}
+    SetThreadIdealProcessorEx(handle, &proc, NULL);
 
-    if (__g_ProcSelectedForThread == __g_ProcGroupCount)
-        __g_ProcSelectedForThread = 0;
-    else
+    if (__g_ProcSelectedForThread < __g_ProcGroupCount)
         ++__g_ProcSelectedForThread;
-
-    //MessageBoxW(NULL, L"Crash", L"NUMAYei", MB_OK);
+    else
+        __g_ProcSelectedForThread = 0;
+    */
 }
