@@ -13,15 +13,23 @@
 
 ## Summary:
 
-This will not make sense if running program does not initially separate WinAPI threads using `CreateThread()` and similar functions. Mechanism load balancer is simple, most programs do not work and do not call functions specifying NUMA node or group processors, so by default very first one is selected (only NUMA 0 or only NUMA 1), if we inject NUMAyei scheduler in app we can redefine all functions to assign to each NUMA node in the system and using NUMA allocator.
+This will not make sense if running program does not initially separate WinAPI threads using `CreateThread()` and similar functions.
+
+Mechanism load balancer is simple, most programs do not work and do not call functions specifying NUMA node or group processors, so by default very first one is selected (only NUMA 0 or only NUMA 1).
+
+If we inject NUMAyei scheduler in app we can redefine all functions to assign to each NUMA node in the system and using NUMA allocator.
 
 ## Why should I use NUMAyei sheduler?
 
-No one forces you to do this, but you will notice how power consumption CPUs will decrease, as well as their performance will increase, since for one NUMA node to work, Windows scheduler has to allocate the highest frequency to calculate task faster, while second node is idle, performing background tasks unrelated to main working desired process used.
+No one forces you to do this, but you will notice how power consumption CPUs will decrease, as well as their performance will increase, since for one NUMA node to work.
+
+Windows scheduler has to allocate the highest frequency to calculate task faster, while second node is idle, performing background tasks unrelated to main working desired process used.
 
 ## Tested on:
 - Windows 11 Pro 23H2 [22631.3296]
 - another not tested
+
+
 
 
 Good example below in screenshot using NUMAyei with running binary not NUMA-aware adapting. 
