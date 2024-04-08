@@ -21,7 +21,7 @@ If we inject NUMAyei scheduler in app we can redefine all functions to assign to
 
 ## Why should I use NUMAyei sheduler?
 
-No one forces you to do this, but you will notice how power consumption CPUs will decrease, as well as their performance will increase, since for one NUMA node to work.
+No one forces you to do this, but you will notice how power consumption CPUs will decrease, as well as their performance will increase, since for one NUMA node to work. With my thread scheduler, you have fully load system on fully worked 100% !
 
 Windows scheduler has to allocate the highest frequency to calculate task faster, while second node is idle, performing background tasks unrelated to main working desired process used.
 
