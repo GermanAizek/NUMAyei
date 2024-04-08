@@ -151,7 +151,7 @@ BOOL InitCreateEnableHooks()
         MessageBoxW(NULL, L"Failed to create CreateRemoteThread hook", L"NUMAYei", MB_OK);
         return TRUE;
     }
-    /*
+    /* dont uncomment - this broken ideal sheduler
     if (MH_CreateHookApiEx(L"kernel32", "CreateRemoteThreadEx", &DetourCreateRemoteThreadEx, reinterpret_cast<LPVOID*>(&fp_CreateRemoteThreadEx), NULL) != MH_OK)
     {
         MessageBoxW(NULL, L"Failed to create CreateRemoteThreadEx hook", L"NUMAYei", MB_OK);
@@ -174,6 +174,7 @@ BOOL InitCreateEnableHooks()
     if (MH_CreateHook(&std::thread::hardware_concurrency, &DetourHardware_concurrency,
         reinterpret_cast<LPVOID*>(&fp_hardware_concurrency)) != MH_OK)
     {
+        MessageBoxW(NULL, L"Failed to create std::thread::hardware_concurrency hook", L"NUMAYei", MB_OK);
         return TRUE;
     }
 
