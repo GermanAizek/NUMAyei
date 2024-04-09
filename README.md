@@ -21,7 +21,7 @@ Moment from video:
 - Hook and rewrite VirtualAlloc to VirtualAllocExNuma for each NUMA node
 - Hook any OpenProcess and CreateProcess for migrate to other NUMA nodes
 - Hook any method detect cores and threads
-- Hook open process as double-click or context menu right-click for non-PRO users not to run cmd.exe or powershell
+- Hook open process as double-click or context menu right-click for non-PRO users ~~not to run cmd.exe or powershell~~ (in future `numayei.exe ./binary_non_numa.exe`)
 
 ## Summary:
 
@@ -46,8 +46,11 @@ Windows scheduler has to allocate the highest frequency to calculate task faster
 - Windows 11 Pro 23H2 [22631.3296]
 - another not tested
 
+## How to Use?
 
-
+1. Download any DLL Injector, I advise you to take an opensource. (im tested on Xenos64 Injector)
+2. Select compiled `NUMADLL.dll` and inject in any process (any methods)
+3. In future `NUMA.exe` it will be an injector and through its parameter you can specify path to running exe or active running process by PID.
 
 Good example below in screenshot using NUMAyei with running binary not NUMA-aware adapting. 
 
