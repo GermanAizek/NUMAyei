@@ -8,8 +8,19 @@
 
 - Use only `Release` builded DLL for injection! Performance Debug configuration will spoil NUMAyei scheduler.
 
+## Where did idea come from?
+
+I watched one `Linux Tech Tips` video from YouTube Channel (https://github.com/LTTLabsOSS) and it became funny to me that they tried to compare launch Crysis 2 on server with x4 GPU SLI and did not see difference in fps metrics. But they did not realize that emphasis was on one CPU because game created threads for one processor, and not for both, so FPS did not change whether new 1x GPU or old x4 GPU SLI. Also, most likely game is made only for maximum 2x SLI, but no more, again, I actually have plans to fix this, in theory, I can make hack to unlock SLI scale GPUs. I hope that @nharris-lmg (https://github.com/nharris-lmg) will be able to notify LTT team about this and re-test Crysis 2 on old NUMA server motherboard using this hack. Not to forget to enable NUMA feature in bios!
+
+Moment from video:
+
+![image](https://github.com/GermanAizek/NUMAyei/assets/21138600/b1faa010-9a7f-415c-8cb8-9703170b0f24)
+
+
 ## TODO:
 - Hook and rewrite VirtualAlloc to VirtualAllocExNuma for each NUMA node
+- Hook any method detect cores and threads
+- Hook open process as double-click or context menu right-click for non-PRO users not to run cmd.exe or powershell
 
 ## Summary:
 
@@ -34,4 +45,8 @@ Windows scheduler has to allocate the highest frequency to calculate task faster
 
 Good example below in screenshot using NUMAyei with running binary not NUMA-aware adapting. 
 
-![](https://github.com/GermanAizek/NUMAyei/assets/21138600/a9da1ef1-4aff-4fd1-bb10-a359c224f32f)
+![NUMA run binary optimization](https://github.com/GermanAizek/NUMAyei/assets/21138600/a9da1ef1-4aff-4fd1-bb10-a359c224f32f)
+
+![NUMA full utilize](https://github.com/GermanAizek/NUMAyei/assets/21138600/c19e3519-8250-4423-94ff-32665b292fd7)
+
+![NUMA Windows full implementation verified bencmark CPU-Z](https://github.com/GermanAizek/NUMAyei/assets/21138600/dee749bc-73ac-4bbf-b183-ee8e0ad861e2)
