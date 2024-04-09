@@ -227,7 +227,10 @@ BOOL WINAPI DetourVirtualFreeEx(
         }
 
         free(__g_VirtAllocBuffers);
+        return TRUE;
     }
+    
+    return FALSE;
 }
 
 unsigned int DetourHardware_concurrency()
