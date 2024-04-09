@@ -18,7 +18,8 @@ Moment from video:
 
 
 ## TODO:
-- Hook and rewrite VirtualAlloc and VirtualAllocEx to VirtualAllocExNuma for each NUMA node
+- Hook and rewrite VirtualAlloc to VirtualAllocExNuma for each NUMA node
+- Hook any OpenProcess and CreateProcess for migrate to other NUMA nodes
 - Hook any method detect cores and threads
 - Hook open process as double-click or context menu right-click for non-PRO users not to run cmd.exe or powershell
 
@@ -40,7 +41,8 @@ No one forces you to do this, but you will notice how power consumption CPUs wil
 
 Windows scheduler has to allocate the highest frequency to calculate task faster, while second node is idle, performing background tasks unrelated to main working desired process used.
 
-## Tested on:
+## Requirements:
+- Minimum version Windows 11 (I will try to make version lower)
 - Windows 11 Pro 23H2 [22631.3296]
 - another not tested
 
