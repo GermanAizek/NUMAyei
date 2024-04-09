@@ -189,24 +189,7 @@ LPVOID WINAPI DetourVirtualAllocEx(
     _In_ DWORD flProtect
 )
 {
-    for (UINT i = 0; i < __g_ProcLogicalThreadCount; ++i)
-    {
-        UCHAR NodeNumber;
-
-        if (!GetNumaProcessorNode(i, &NodeNumber))
-        {
-            //assert(false);
-        }
-
-        auto data = VirtualAllocExNuma(hProcess, lpAddress, dwSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE, NodeNumber);
-
-        __g_VirtAllocBuffers[i] = data;
-
-        // full memory call below will touch every page in the buffer, faulting them into our working set.
-        FillMemory(data, dwSize, 'x');
-    }
-
-    return __g_VirtAllocBuffers[__g_ProcLogicalThreadCount]; // TODO: it will be necessary to test which block allocated memory is better to return back
+    return virtualAllocNUMA(hProcess, lpAddress, dwSize);
 }
 
 BOOL WINAPI DetourVirtualFreeEx(
@@ -216,21 +199,7 @@ BOOL WINAPI DetourVirtualFreeEx(
     _In_ DWORD dwFreeType
 )
 {
-    if (__g_VirtAllocBuffers != NULL)
-    {
-        for (UINT i = 0; i < __g_ProcLogicalThreadCount; ++i)
-        {
-            if (__g_VirtAllocBuffers[i] != NULL)
-            {
-                VirtualFree(__g_VirtAllocBuffers[i], 0, MEM_RELEASE);
-            }
-        }
-
-        free(__g_VirtAllocBuffers);
-        return TRUE;
-    }
-    
-    return FALSE;
+    return virtualFreeNUMA();
 }
 
 unsigned int DetourHardware_concurrency()

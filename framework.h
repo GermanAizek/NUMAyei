@@ -127,3 +127,62 @@ void setThreadParallelAllNUMAGroups(HANDLE handle) noexcept
     else
         __g_ProcSelectedForThread = 0;
 }
+
+LPVOID virtualAllocNUMA(HANDLE hProcess, LPVOID lpAddress, SIZE_T dwSize)
+{
+    //
+    // Allocate array of pointers to memory blocks.
+    //
+
+    __g_VirtAllocBuffers = (PVOID*)malloc(sizeof(PVOID) * __g_ProcLogicalThreadCount);
+
+    if (__g_VirtAllocBuffers == NULL)
+    {
+        //_putts(_T("Allocating array of buffers failed"));
+        //goto Exit;
+    }
+
+    ZeroMemory(__g_VirtAllocBuffers, sizeof(PVOID) * __g_ProcLogicalThreadCount);
+
+    //
+    // For each processor, get its associated NUMA node and allocate some memory from it.
+    //
+
+    for (UINT i = 0; i < __g_ProcLogicalThreadCount; ++i)
+    {
+        UCHAR NodeNumber;
+
+        if (!GetNumaProcessorNode(i, &NodeNumber))
+        {
+            //assert(false);
+        }
+
+        auto data = VirtualAllocExNuma(hProcess, lpAddress, dwSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE, NodeNumber);
+
+        __g_VirtAllocBuffers[i] = data;
+
+        // full memory call below will touch every page in the buffer, faulting them into our working set.
+        FillMemory(data, dwSize, 'x');
+    }
+
+    return __g_VirtAllocBuffers[__g_ProcLogicalThreadCount]; // TODO: it will be necessary to test which block allocated memory is better to return back
+}
+
+BOOL virtualFreeNUMA()
+{
+    if (__g_VirtAllocBuffers != NULL)
+    {
+        for (UINT i = 0; i < __g_ProcLogicalThreadCount; ++i)
+        {
+            if (__g_VirtAllocBuffers[i] != NULL)
+            {
+                VirtualFree(__g_VirtAllocBuffers[i], 0, MEM_RELEASE);
+            }
+        }
+
+        free(__g_VirtAllocBuffers);
+        return TRUE;
+    }
+
+    return FALSE;
+}
