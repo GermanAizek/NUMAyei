@@ -14,7 +14,7 @@ I watched one video `How Bad is This $10,000 PC from 10 Years Ago??` from YouTub
 
 Moment from video:
 
-![image](https://github.com/GermanAizek/NUMAyei/assets/21138600/b1faa010-9a7f-415c-8cb8-9703170b0f24)
+![2 CPU full utilize](https://github.com/GermanAizek/NUMAyei/assets/21138600/b1faa010-9a7f-415c-8cb8-9703170b0f24)
 
 
 ## TODO:
@@ -63,3 +63,12 @@ Good example below in screenshot using NUMAyei with running binary not NUMA-awar
 ![NUMA full utilize](https://github.com/GermanAizek/NUMAyei/assets/21138600/c19e3519-8250-4423-94ff-32665b292fd7)
 
 ![NUMA Windows full implementation verified bencmark CPU-Z](https://github.com/GermanAizek/NUMAyei/assets/21138600/dee749bc-73ac-4bbf-b183-ee8e0ad861e2)
+
+#### Updated with new NUMA allocation (beginning with commit [6c6fb5](https://github.com/GermanAizek/NUMAyei/commit/6c6fb5cbfd4606ada20970354797771f6ac6a338))
+
+In new CPU-Z version:
+
+![2 old server cpu equal modern cpu](https://github.com/GermanAizek/NUMAyei/assets/21138600/3b94d5fd-d66d-4797-8164-b591ae3776b6)
+
+![Xeon E5-2699 v3 (dual socket) vs modern cpus](https://github.com/GermanAizek/NUMAyei/assets/21138600/ecdae967-8b6f-4e32-9351-d6be16f6ee57)
+
