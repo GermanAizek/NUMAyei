@@ -18,7 +18,7 @@ Moment from video:
 
 
 ## TODO:
-- Hook and rewrite VirtualAlloc to VirtualAllocExNuma for each NUMA node
+- Hook and rewrite VirtualAlloc and VirtualAllocEx to VirtualAllocExNuma for each NUMA node
 - Hook any method detect cores and threads
 - Hook open process as double-click or context menu right-click for non-PRO users not to run cmd.exe or powershell
 
