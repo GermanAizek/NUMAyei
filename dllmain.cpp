@@ -55,10 +55,17 @@ HGetActiveProcessorCount fp_GetActiveProcessorCount = NULL;
 
 typedef DWORD(WINAPI* HGetEnvironmentVariableA)(
     _In_opt_ LPCSTR lpName,
-    _Out_writes_to_opt_(nSize, return +1) LPSTR lpBuffer,
+    _Out_writes_to_opt_(nSize, return + 1) LPSTR lpBuffer,
     _In_ DWORD nSize
 );
 HGetEnvironmentVariableA fp_GetEnvironmentVariableA = NULL;
+
+typedef DWORD(WINAPI* HGetEnvironmentVariableW)(
+    _In_opt_ LPCWSTR lpName,
+    _Out_writes_to_opt_(nSize, return + 1) LPWSTR lpBuffer,
+    _In_ DWORD nSize
+    );
+HGetEnvironmentVariableW fp_GetEnvironmentVariableW = NULL;
 
 typedef unsigned int (*Hhardware_concurrency)();
 Hhardware_concurrency fp_hardware_concurrency = NULL;
@@ -131,10 +138,8 @@ DWORD WINAPI DetourGetActiveProcessorCount(
     _In_ WORD GroupNumber
 )
 {
-    // MessageBoxA(0, "DetourGetActiveProcessorCount", "Some Title", MB_ICONERROR | MB_OK);
     GroupNumber = ALL_PROCESSOR_GROUPS;
     return fp_GetActiveProcessorCount(GroupNumber);
-    //return __g_ProcLogicalThreadCount;
 }
 
 DWORD WINAPI DetourGetEnvironmentVariableA(
@@ -146,6 +151,17 @@ DWORD WINAPI DetourGetEnvironmentVariableA(
     if (lpName == "NUMBER_OF_PROCESSORS")
         _itoa(__g_ProcLogicalThreadCount, lpBuffer, 10);
     return fp_GetEnvironmentVariableA(lpName, lpBuffer, nSize);
+}
+
+DWORD WINAPI DetourGetEnvironmentVariableW(
+    _In_opt_ LPCWSTR lpName,
+    _Out_writes_to_opt_(nSize, return +1) LPWSTR lpBuffer,
+    _In_ DWORD nSize
+)
+{
+    if (lpName == L"NUMBER_OF_PROCESSORS")
+        _itow(__g_ProcLogicalThreadCount, lpBuffer, 10);
+    return fp_GetEnvironmentVariableW(lpName, lpBuffer, nSize);
 }
 
 unsigned int DetourHardware_concurrency()
@@ -191,6 +207,12 @@ BOOL InitCreateEnableHooks()
     if (MH_CreateHookApiEx(L"kernel32", "GetEnvironmentVariableA", &DetourGetEnvironmentVariableA, reinterpret_cast<LPVOID*>(&fp_GetEnvironmentVariableA), NULL) != MH_OK)
     {
         MessageBoxW(NULL, L"Failed to create GetEnvironmentVariableA hook", L"NUMAYei", MB_OK);
+        return TRUE;
+    }
+
+    if (MH_CreateHookApiEx(L"kernel32", "GetEnvironmentVariableW", &DetourGetEnvironmentVariableW, reinterpret_cast<LPVOID*>(&fp_GetEnvironmentVariableW), NULL) != MH_OK)
+    {
+        MessageBoxW(NULL, L"Failed to create GetEnvironmentVariableW hook", L"NUMAYei", MB_OK);
         return TRUE;
     }
     
