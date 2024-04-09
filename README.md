@@ -10,7 +10,7 @@
 
 ## Where did idea come from?
 
-I watched one `Linux Tech Tips` video from YouTube Channel ([@LinusTechTips](https://www.youtube.com/@LinusTechTips)) and it became funny to me that they tried to compare launch Crysis 2 on server with x4 GPU SLI and did not see difference in fps metrics. But they did not realize that emphasis was on one CPU because game created threads for one processor, and not for both, so FPS did not change whether new 1x GPU or old x4 GPU SLI. Also, most likely game is made only for maximum 2x SLI, but no more, again, I actually have plans to fix this, in theory, I can make hack to unlock SLI scale GPUs. I hope that [@nharris-lmg](https://github.com/nharris-lmg) will be able to notify LTT team about this and re-test Crysis 2 on old NUMA server motherboard using this hack. Not to forget to enable NUMA feature in bios!
+I watched one video `How Bad is This $10,000 PC from 10 Years Ago??` from YouTube Channel ([@LinusTechTips](https://www.youtube.com/@LinusTechTips)) and it became funny to me that they tried to compare launch Crysis 2 on server with x4 GPU SLI and did not see difference in fps metrics. But they did not realize that emphasis was on one CPU because game created threads for one processor, and not for both, so FPS did not change whether new 1x GPU or old x4 GPU SLI. Also, most likely game is made only for maximum 2x SLI, but no more, again, I actually have plans to fix this, in theory, I can make hack to unlock SLI scale GPUs. I hope that [@nharris-lmg](https://github.com/nharris-lmg) will be able to notify LTT team about this and re-test Crysis 2 on old NUMA server motherboard using this hack. Not to forget to enable NUMA feature in bios!
 
 Moment from video:
 
