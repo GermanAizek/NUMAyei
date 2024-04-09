@@ -30,6 +30,10 @@ Mechanism load balancer is simple, most programs do not work and do not call fun
 
 If we inject NUMAyei scheduler in app we can redefine all functions to assign to each NUMA node in the system and using NUMA allocator.
 
+I strictly remind you that programs that are already optimized for NUMA will not give any strong performance profit. Examples that I tested: XMRig miner, some benchmarks like Corona, Blender, etc.
+
+It is desirable to have some kind text database on Wiki Github where there info compatibility and it will increase performance as percentage.
+
 ## Why should I use NUMAyei sheduler?
 
 No one forces you to do this, but you will notice how power consumption CPUs will decrease, as well as their performance will increase, since for one NUMA node to work. With my thread scheduler, you have fully load system on fully worked 100% !
