@@ -53,19 +53,28 @@ typedef DWORD (WINAPI* HGetActiveProcessorCount)(
 );
 HGetActiveProcessorCount fp_GetActiveProcessorCount = NULL;
 
-typedef DWORD(WINAPI* HGetEnvironmentVariableA)(
+typedef DWORD (WINAPI* HGetEnvironmentVariableA)(
     _In_opt_ LPCSTR lpName,
     _Out_writes_to_opt_(nSize, return + 1) LPSTR lpBuffer,
     _In_ DWORD nSize
 );
 HGetEnvironmentVariableA fp_GetEnvironmentVariableA = NULL;
 
-typedef DWORD(WINAPI* HGetEnvironmentVariableW)(
+typedef DWORD (WINAPI* HGetEnvironmentVariableW)(
     _In_opt_ LPCWSTR lpName,
     _Out_writes_to_opt_(nSize, return + 1) LPWSTR lpBuffer,
     _In_ DWORD nSize
     );
 HGetEnvironmentVariableW fp_GetEnvironmentVariableW = NULL;
+
+typedef LPVOID (WINAPI* HVirtualAllocEx)(
+    _In_ HANDLE hProcess,
+    _In_opt_ LPVOID lpAddress,
+    _In_ SIZE_T dwSize,
+    _In_ DWORD flAllocationType,
+    _In_ DWORD flProtect
+);
+HVirtualAllocEx fp_VirtualAllocEx = NULL;
 
 typedef unsigned int (*Hhardware_concurrency)();
 Hhardware_concurrency fp_hardware_concurrency = NULL;
@@ -164,6 +173,55 @@ DWORD WINAPI DetourGetEnvironmentVariableW(
     return fp_GetEnvironmentVariableW(lpName, lpBuffer, nSize);
 }
 
+LPVOID WINAPI DetourVirtualAllocEx(
+    _In_ HANDLE hProcess,
+    _In_opt_ LPVOID lpAddress,
+    _In_ SIZE_T dwSize,
+    _In_ DWORD flAllocationType,
+    _In_ DWORD flProtect
+)
+{
+    for (UINT i = 0; i < __g_ProcLogicalThreadCount; ++i)
+    {
+        UCHAR NodeNumber;
+
+        if (!GetNumaProcessorNode(i, &NodeNumber))
+        {
+            //assert(false);
+        }
+
+        auto data = VirtualAllocExNuma(hProcess, lpAddress, dwSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE, NodeNumber);
+
+        __g_VirtAllocBuffers[i] = data;
+
+        // full memory call below will touch every page in the buffer, faulting them into our working set.
+        FillMemory(data, dwSize, 'x');
+    }
+
+    return __g_VirtAllocBuffers[__g_ProcLogicalThreadCount]; // TODO: it will be necessary to test which block allocated memory is better to return back
+}
+
+BOOL WINAPI DetourVirtualFreeEx(
+    _In_ HANDLE hProcess,
+    _Pre_notnull_ _When_(dwFreeType == MEM_DECOMMIT, _Post_invalid_) _When_(dwFreeType == MEM_RELEASE, _Post_ptr_invalid_) LPVOID lpAddress,
+    _In_ SIZE_T dwSize,
+    _In_ DWORD dwFreeType
+)
+{
+    if (__g_VirtAllocBuffers != NULL)
+    {
+        for (UINT i = 0; i < __g_ProcLogicalThreadCount; ++i)
+        {
+            if (__g_VirtAllocBuffers[i] != NULL)
+            {
+                VirtualFree(__g_VirtAllocBuffers[i], 0, MEM_RELEASE);
+            }
+        }
+
+        free(__g_VirtAllocBuffers);
+    }
+}
+
 unsigned int DetourHardware_concurrency()
 {
     // MessageBoxA(0, "DetourHardware_concurrency", "Some Title", MB_ICONERROR | MB_OK);
@@ -213,6 +271,12 @@ BOOL InitCreateEnableHooks()
     if (MH_CreateHookApiEx(L"kernel32", "GetEnvironmentVariableW", &DetourGetEnvironmentVariableW, reinterpret_cast<LPVOID*>(&fp_GetEnvironmentVariableW), NULL) != MH_OK)
     {
         MessageBoxW(NULL, L"Failed to create GetEnvironmentVariableW hook", L"NUMAYei", MB_OK);
+        return TRUE;
+    }
+
+    if (MH_CreateHookApiEx(L"kernel32", "VirtualAllocEx", &DetourVirtualAllocEx, reinterpret_cast<LPVOID*>(&fp_VirtualAllocEx), NULL) != MH_OK)
+    {
+        MessageBoxW(NULL, L"Failed to create VirtualAllocEx hook", L"NUMAYei", MB_OK);
         return TRUE;
     }
     

@@ -21,6 +21,7 @@ bool IsNUMA() noexcept
 int __g_ProcGroupCount = 0;
 int __g_ProcLogicalThreadCount = 0;
 int __g_ProcSelectedForThread = 0;
+PVOID* __g_VirtAllocBuffers = NULL;
 
 int calcLogicalGroups()
 {
