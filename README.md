@@ -35,7 +35,7 @@ I strictly remind you that programs that are already optimized for NUMA will not
 
 It is desirable to have some kind text database on Wiki Github where there info compatibility and it will increase performance as percentage.
 
-## Why you should NUMAyei sheduler?
+## Why you should use NUMAyei sheduler?
 
 No one forces you to do this, but you will notice how power consumption CPUs will decrease, as well as their performance will increase, since for one NUMA node to work. With my thread scheduler, you have fully load system on fully worked 100% !
 
