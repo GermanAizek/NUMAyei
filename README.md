@@ -43,6 +43,10 @@ Windows scheduler has to allocate the highest frequency to calculate task faster
 
 ## Requirements:
 - Minimum version Windows 11 (I will try to make version lower)
+- Any DLL Injector
+- Builded NUMADLL.dll
+
+## Tested on:
 - Windows 11 Pro 23H2 [22631.3296]
 - another not tested
 
