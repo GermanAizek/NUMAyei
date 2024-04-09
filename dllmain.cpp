@@ -76,6 +76,14 @@ typedef LPVOID (WINAPI* HVirtualAllocEx)(
 );
 HVirtualAllocEx fp_VirtualAllocEx = NULL;
 
+typedef BOOL (WINAPI* HVirtualFreeEx)(
+    _In_ HANDLE hProcess,
+    _Pre_notnull_ _When_(dwFreeType == MEM_DECOMMIT, _Post_invalid_) _When_(dwFreeType == MEM_RELEASE, _Post_ptr_invalid_) LPVOID lpAddress,
+    _In_ SIZE_T dwSize,
+    _In_ DWORD dwFreeType
+);
+HVirtualFreeEx fp_VirtualFreeEx = NULL;
+
 typedef unsigned int (*Hhardware_concurrency)();
 Hhardware_concurrency fp_hardware_concurrency = NULL;
 
@@ -277,6 +285,12 @@ BOOL InitCreateEnableHooks()
     if (MH_CreateHookApiEx(L"kernel32", "VirtualAllocEx", &DetourVirtualAllocEx, reinterpret_cast<LPVOID*>(&fp_VirtualAllocEx), NULL) != MH_OK)
     {
         MessageBoxW(NULL, L"Failed to create VirtualAllocEx hook", L"NUMAYei", MB_OK);
+        return TRUE;
+    }
+
+    if (MH_CreateHookApiEx(L"kernel32", "VirtualFreeEx", &DetourVirtualFreeEx, reinterpret_cast<LPVOID*>(&fp_VirtualFreeEx), NULL) != MH_OK)
+    {
+        MessageBoxW(NULL, L"Failed to create VirtualFreeEx hook", L"NUMAYei", MB_OK);
         return TRUE;
     }
     
