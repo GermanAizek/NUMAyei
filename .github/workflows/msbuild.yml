@@ -30,6 +30,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Cloning dependencies
+      uses: actions/checkout@master
+      with:
+        repository: TsudaKageyu/minhook
+
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
 
