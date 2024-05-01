@@ -44,11 +44,12 @@ Windows scheduler has to allocate the highest frequency to calculate task faster
 ## Requirements:
 - Minimum version Windows 11 (I will try to make version lower)
 - Any DLL Injector
-- Builded NUMADLL.dll
+- Builded NUMADLL.dll (once I set up Github CI, you can download latest binaries from ![here](https://github.com/GermanAizek/NUMAyei/releases))
 
 ## Tested on:
 - Windows 11 Pro 23H2 [22631.3296]
-- another not tested
+- 2 NUMA nodes (dual socket)
+- Xeon E5 v3-v4 family CPU
 
 ## How to Use?
 
